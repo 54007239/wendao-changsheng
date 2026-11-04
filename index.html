@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>问道长生 · 七章修仙文字游戏</title>
+<meta name="description" content="问道长生：一款水墨国风的修仙文字冒险游戏，七章剧情、九十二种结局，每一步选择都会改变你的道。">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="ink-bg"></div>
+  <div class="layout">
+
+    <!-- 主区域 -->
+    <main class="stage">
+      <header class="topbar">
+        <div class="game-title">问道长生</div>
+        <div class="chapter" id="chapter-label"></div>
+        <div class="topbar-actions">
+          <button class="mini-btn" id="btn-undo" title="退回上一步" disabled>↶ 回退</button>
+          <button class="mini-btn" id="btn-save" title="手动存档 / 读档">▤ 存档</button>
+          <button class="mini-btn" id="btn-achv" title="查看成就">★ 成就</button>
+          <button class="mini-btn" id="btn-codex" title="查看已收录的结局">☰ 结局图鉴</button>
+          <button class="mini-btn" id="btn-sound" title="琴音（浏览器生成，无音频文件）">♪ 琴音 · 关</button>
+          <button class="mini-btn" id="btn-restart" title="重新开始">↺ 重入轮回</button>
+        </div>
+      </header>
+
+      <!-- 场景视觉 -->
+      <div class="scene-visual" id="scene-visual">
+        <div class="scene-art" id="scene-art"></div>
+        <div class="portrait-layer" id="portrait-layer"></div>
+        <div class="weather" id="weather"></div>
+        <div class="scene-name" id="scene"></div>
+        <div class="chapter-banner" id="chapter-banner" aria-hidden="true"></div>
+      </div>
+
+      <!-- 叙事文本 -->
+      <section class="narrative">
+        <h2 class="event-title" id="event-title"></h2>
+        <p class="event-text" id="event-text"></p>
+        <div class="ending-note" id="ending-note"></div>
+      </section>
+
+      <!-- 选项 -->
+      <section class="options" id="options"></section>
+      <div class="toast-area" id="toast-area"></div>
+    </main>
+
+    <!-- 属性面板 -->
+    <aside class="sidebar">
+      <div class="panel-title">修为境界</div>
+      <div class="realm-badge" id="realm">炼气期</div>
+      <div class="run-line">第 <span id="run-no">1</span> 世 · 结局收录 <span id="codex-count">0 / 92</span></div>
+      <div class="run-line">成就 <span id="achv-count">0 / 30</span></div>
+      <div class="path-line">道途：<span id="path-label">求道 · 未定之身</span></div>
+
+      <div class="panel-title">六维属性</div>
+      <div class="attr-list" id="attr-list"></div>
+      <div class="panel-tip">每一步选择都在改写属性与因果。属性决定你能解锁的选项，标记决定你会遇见谁、走到哪一重结局。</div>
+    </aside>
+  </div>
+
+  <!-- 结局图鉴 -->
+  <div class="codex-overlay" id="codex-overlay" hidden>
+    <div class="codex-panel" role="dialog" aria-modal="true" aria-label="结局图鉴">
+      <div class="codex-head">
+        <h3>结局图鉴</h3>
+        <span class="codex-progress" id="codex-progress">0 / 92</span>
+        <button class="codex-close" id="codex-close" title="关闭">×</button>
+      </div>
+      <div class="codex-hint">每次轮回的结局都会收录于此。未解锁的结局会显示达成条件。</div>
+      <div class="codex-body" id="codex-body"></div>
+    </div>
+  </div>
+
+  <!-- 手动存档 -->
+  <div class="slot-overlay" id="slot-overlay" hidden>
+    <div class="slot-panel" role="dialog" aria-modal="true" aria-label="存档与读档">
+      <div class="slot-head">
+        <h3>存档 · 读档</h3>
+        <span class="slot-hint">三个手动存档位，互不覆盖；自动存档始终记录最新进度。</span>
+        <button class="codex-close" id="slot-close" title="关闭">×</button>
+      </div>
+      <div class="slot-body" id="slot-body"></div>
+    </div>
+  </div>
+
+  <!-- 成就 -->
+  <div class="achv-overlay" id="achv-overlay" hidden>
+    <div class="achv-panel" role="dialog" aria-modal="true" aria-label="成就">
+      <div class="achv-head">
+        <h3>成就</h3>
+        <span class="achv-progress" id="achv-progress">0 / 30</span>
+        <button class="codex-close" id="achv-close" title="关闭">×</button>
+      </div>
+      <div class="achv-hint">跨周目累计，永久保存。剧情、结局、修行与系统四类，共 30 项。</div>
+      <div class="achv-body" id="achv-body"></div>
+    </div>
+  </div>
+
+  <script src="js/story.js"></script>
+  <script src="js/story_ch2.js"></script>
+  <script src="js/story_ch3.js"></script>
+  <script src="js/story_ch4.js"></script>
+  <script src="js/story_ch5.js"></script>
+  <script src="js/story_ch6.js"></script>
+  <script src="js/story_ch7.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
