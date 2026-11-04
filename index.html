@@ -39,6 +39,10 @@
       <section class="narrative">
         <h2 class="event-title" id="event-title"></h2>
         <p class="event-text" id="event-text"></p>
+        <div class="npc-react" id="npc-react" hidden>
+          <span class="npc-name" id="npc-name"></span>
+          <span class="npc-line" id="npc-line"></span>
+        </div>
         <div class="ending-note" id="ending-note"></div>
       </section>
 
@@ -54,6 +58,9 @@
       <div class="run-line">第 <span id="run-no">1</span> 世 · 结局收录 <span id="codex-count">0 / 92</span></div>
       <div class="run-line">成就 <span id="achv-count">0 / 30</span></div>
       <div class="path-line">道途：<span id="path-label">求道 · 未定之身</span></div>
+
+      <div class="panel-title">人物</div>
+      <div class="relations" id="relations"></div>
 
       <div class="panel-title">六维属性</div>
       <div class="attr-list" id="attr-list"></div>
@@ -107,8 +114,10 @@
   <script src="js/story_ch6.js"></script>
   <script src="js/story_ch7.js"></script>
   <script src="js/echoes.js"></script>
+  <script src="js/attitude.js"></script>
   <script src="js/achievements.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>
+
 

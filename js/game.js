@@ -317,6 +317,8 @@
     title.textContent = "选择之后";
     title.className = "event-title tone-causal";
     $("event-text").textContent = v.text || "";
+    const npc = $("npc-react");
+    if (npc) npc.hidden = true;
     const note = $("ending-note");
     note.textContent = "—— 因果已生，继续前行 ——";
     note.classList.remove("fresh");
@@ -337,6 +339,7 @@
       box.appendChild(undo);
     }
 
+    renderRelations();
     renderAttrs();
     updateRunInfo();
     if (changes && changes.length) showEffects(changes);
@@ -897,6 +900,7 @@
     title.textContent = ev.title;
     title.className = "event-title";
     $("event-text").textContent = resolveEventText(ev);
+    renderNpcReaction(ev);
 
     const box = $("options");
     box.innerHTML = "";
@@ -915,12 +919,12 @@
       box.appendChild(btn);
     });
 
+    renderRelations();
     renderAttrs();
     updateRunInfo();
     updateAchvBadge();
     checkAchievements();
   }
-
   function condHint(cond) {
     if (!cond) return "";
     const parts = [];
@@ -1470,6 +1474,78 @@
     const ov = $("achv-overlay");
     if (ov) ov.hidden = true;
     document.body.classList.remove("codex-open");
+  }
+
+  /* ================= 人物态度 ================= */
+
+  const ATTITUDE_CHARS = ["阿禾", "苏漓", "赵乾"];
+  const ATTITUDE_LABELS = { "-2": "决裂", "-1": "疏远", "0": "平淡", "1": "亲近", "2": "生死相托" };
+  const ATTITUDE_RULES = {
+    "阿禾": [
+      [-2, { anyFlags: ["屠狐", "投名状", "血池洗礼"] }],
+      [-1, { anyFlags: ["袖手旁观"] }],
+      [2, { flags: ["药庐同心"] }],
+      [1, { anyFlags: ["药王谷之恩", "青崖善缘", "阿禾之约"] }],
+      [0, null]
+    ],
+    "苏漓": [
+      [-2, { flags: ["屠狐"] }],
+      [-1, { anyFlags: ["袖手旁观"] }],
+      [2, { flags: ["青丘同契"] }],
+      [1, { anyFlags: ["狐妖之恩", "青丘信物", "狐侣同行"] }],
+      [0, null]
+    ],
+    "赵乾": [
+      [-2, { flags: ["赵乾之怨"], notFlags: ["渡魔", "赵乾悔悟"] }],
+      [2, { anyFlags: ["渡魔", "赵乾悔悟"] }],
+      [1, { anyFlags: ["道心可托", "弟子守山"] }],
+      [0, null]
+    ]
+  };
+
+  function attitudeTier(name) {
+    const rules = ATTITUDE_RULES[name] || [];
+    for (const rule of rules) {
+      if (!rule[1] || checkCond(rule[1])) return rule[0];
+    }
+    return 0;
+  }
+
+  function attitudeBand(tier) {
+    if (tier <= -1) return "cold";
+    if (tier >= 1) return "warm";
+    return "calm";
+  }
+
+  function renderRelations() {
+    const box = $("relations");
+    if (!box) return;
+    box.innerHTML = ATTITUDE_CHARS.map((name) => {
+      const tier = attitudeTier(name);
+      const band = attitudeBand(tier);
+      const pct = Math.round(((tier + 2) / 4) * 100);
+      return '<div class="rel-row rel-' + band + '">' +
+        '<span class="rel-name">' + name + "</span>" +
+        '<span class="rel-bar"><span class="rel-fill" style="width:' + pct + '%"></span></span>' +
+        '<span class="rel-label">' + (ATTITUDE_LABELS[String(tier)] || "平淡") + "</span></div>";
+    }).join("");
+  }
+
+  function renderNpcReaction(ev) {
+    const box = $("npc-react");
+    if (!box) return;
+    const table = GAME_DATA.attitudeLines || {};
+    const entry = table[state.current];
+    if (!entry) { box.hidden = true; return; }
+    const name = ATTITUDE_CHARS.find((n) => entry[n]) || Object.keys(entry)[0];
+    const lines = entry[name] || {};
+    const band = attitudeBand(attitudeTier(name));
+    const line = lines[band] || lines.calm;
+    if (!line) { box.hidden = true; return; }
+    $("npc-name").textContent = name;
+    $("npc-line").textContent = line;
+    box.className = "npc-react " + band;
+    box.hidden = false;
   }
 
   /* ================= 琴音（WebAudio 生成，无音频文件） ================= */
