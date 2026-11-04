@@ -220,20 +220,17 @@
     return changes;
   }
 
-  function choose(idx) {
-    const ev = GAME_DATA.events[state.current];
-    if (!ev) return;
-    const opt = ev.options[idx];
-    if (!opt || !checkCond(opt.cond)) return;
+  function echoFor(eventId, idx) {
+    const table = GAME_DATA.echoes;
+    if (!table) return null;
+    const e = table[eventId + "#" + idx];
+    if (!e) return null;
+    return typeof e === "string" ? { text: e } : e;
+  }
 
-    pushSnapshot();
-    const changes = applyEffects(opt);
-    state.history.push({ event: state.current, choice: opt.text });
-    const route = resolveNext(opt.next);
-    const nextId = route.go;
-
+  function advance(nextId, deathCause, changes) {
     if (nextId === "__DEATH__") {
-      state.view = { type: "death", cause: opt.death || route.death || "" };
+      state.view = { type: "death", cause: deathCause || "" };
       save();
       drawDeath();
       refreshTopbar();
@@ -261,9 +258,88 @@
     state.view = { type: "event" };
     save();
     renderEvent();
-    showEffects(changes);
+    if (changes && changes.length) showEffects(changes);
     refreshTopbar();
     scrollTop();
+  }
+
+  function choose(idx) {
+    const ev = GAME_DATA.events[state.current];
+    if (!ev) return;
+    const opt = ev.options[idx];
+    if (!opt || !checkCond(opt.cond)) return;
+
+    const eventId = state.current;
+    pushSnapshot();
+    const changes = applyEffects(opt);
+    const echo = echoFor(eventId, idx);
+    if (echo && Array.isArray(echo.flags)) {
+      echo.flags.forEach((f) => { if (state.flags.indexOf(f) < 0) state.flags.push(f); });
+    }
+    state.history.push({ event: eventId, choice: opt.text });
+    const route = resolveNext(opt.next);
+    const nextId = route.go;
+    const death = opt.death || route.death || "";
+
+    if (echo && echo.text) {
+      state.view = { type: "outcome", eventId: eventId, text: echo.text, next: nextId, death: death };
+      save();
+      drawOutcome(changes);
+      refreshTopbar();
+      scrollTop();
+      return;
+    }
+
+    advance(nextId, death, changes);
+  }
+
+  function resolveOutcome() {
+    const v = state.view;
+    if (!v || v.type !== "outcome") return;
+    advance(v.next, v.death, []);
+  }
+
+  function drawOutcome(changes) {
+    const v = state.view || {};
+    const ev = GAME_DATA.events[v.eventId] || {};
+    setChapter(ev.chapter || GAME_DATA.meta.chapter);
+    if ($("realm")) $("realm").textContent = ev.realm || "炼气期";
+    renderScene({
+      scene: ev.scene || "",
+      art: ev.art,
+      sceneKind: ev.sceneKind,
+      cast: ev.cast,
+      weather: ev.weather,
+      title: ev.title
+    });
+
+    const title = $("event-title");
+    title.textContent = "选择之后";
+    title.className = "event-title tone-causal";
+    $("event-text").textContent = v.text || "";
+    const note = $("ending-note");
+    note.textContent = "—— 因果已生，继续前行 ——";
+    note.classList.remove("fresh");
+
+    const box = $("options");
+    box.innerHTML = "";
+    const next = document.createElement("button");
+    next.className = "opt-btn restart";
+    next.innerHTML = '<span class="opt-text">继续 →</span>';
+    next.onclick = resolveOutcome;
+    box.appendChild(next);
+
+    if (canUndo()) {
+      const undo = document.createElement("button");
+      undo.className = "opt-btn ghost undo-btn";
+      undo.innerHTML = '<span class="opt-text">↶ 收回这个选择</span>';
+      undo.onclick = () => undoStep();
+      box.appendChild(undo);
+    }
+
+    renderAttrs();
+    updateRunInfo();
+    if (changes && changes.length) showEffects(changes);
   }
 
   /* ================= 渲染 : 场景插画 ================= */
@@ -1157,6 +1233,10 @@
 
   function renderView() {
     const v = state.view || { type: "event" };
+    if (v.type === "outcome") {
+      drawOutcome([]);
+      return;
+    }
     if (v.type === "settle" && SETTLE_CONFIG[v.key]) {
       drawSettle(v.key);
       return;
@@ -1505,6 +1585,13 @@
     if (!s.view) s.view = { type: "event" };
     if (!s.run) s.run = 1;
     if (!Array.isArray(s.snapshots)) s.snapshots = [];
+    if (s.view.type === "outcome") {
+      const n = s.view.next;
+      const validNext = n === "__DEATH__" || n === "__ENDING__" ||
+        (typeof n === "string" && n.indexOf("__SETTLE_") === 0 && SETTLE_CONFIG[n]) ||
+        (typeof n === "string" && !!GAME_DATA.events[n]);
+      if (!s.view.text || !validNext) s.view = { type: "event" };
+    }
     if (s.view.type === "settle" && !SETTLE_CONFIG[s.view.key]) s.view = { type: "event" };
     if (s.view.type === "death" && !s.view.cause) s.view = { type: "event" };
     if (s.view.type === "event" && !GAME_DATA.events[s.current]) return null;
@@ -1770,6 +1857,8 @@
     resolveNext: resolveNext,
     undo: undoStep,
     canUndo: canUndo,
+    continue: resolveOutcome,
+    echoFor: echoFor,
     saveSlot: writeSlot,
     loadSlot: readSlot,
     slots: loadSlots
